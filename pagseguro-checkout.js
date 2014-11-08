@@ -36,11 +36,7 @@ var objectToXml = function (obj) {
     var xml = [ ];
     for (var key in obj) {
         var value = obj[key];
-
-        if (V.isObject(value)) {
-            xml.push(keyValueToXml(key, objectToXml(value)));
-            continue;
-        }
+        if (V.isObject(value)) value = objectToXml(value);
 
         xml.push(keyValueToXml(key, value));
     }
@@ -71,12 +67,12 @@ function PagseguroCheckout (opts) {
     this.items = opts.items || [ ];
 
     for (var key in defaultOptions) {
-        (function(key, self) {
-            self[key] = function(v) {
-                return self._getOrSetCheckoutProperty(key, v);
+        (function(key) {
+            this[key] = function(v) {
+                return this._getOrSetCheckoutProperty(key, v);
             }
-            self.checkout[key] = opts[key] || defaultOptions[key];
-        }(key, this));
+            this.checkout[key] = opts[key] || defaultOptions[key];
+        }).call(this, key);
     }
 };
 
@@ -102,13 +98,8 @@ PagseguroCheckout.prototype = {
         for (var key in this.checkout) {
             var value = this.checkout[key];
 
-            if (value == null) {
-                continue;
-            }
-            
-            if (V.isObject(value)) {
-                value = objectToXml(value);
-            }
+            if (value == null) continue;
+            if (V.isObject(value)) value = objectToXml(value);
 
             checkout.push(keyValueToXml(key, value));
         }
@@ -179,11 +170,11 @@ PagseguroCheckout.prototype = {
         });
     },
 
-    _getOrSetCheckoutProperty: function (attr, object) {
+    _getOrSetCheckoutProperty: function (attr, value) {
         V.string(attr, 'attr');
 
-        if (object != null) {
-            this.checkout[attr] = object;
+        if (value !== undefined) {
+            this.checkout[attr] = value;
             return this;
         }
 
