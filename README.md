@@ -74,6 +74,6 @@ p.request(function (err, res) {
 });
 ```
 
-### Dependency
+## Dependency
 - [request](https://github.com/request/request)
 - [argument-validator](https://github.com/Deividy/argument-validator)
