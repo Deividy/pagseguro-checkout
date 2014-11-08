@@ -62,7 +62,7 @@ p.shipping({
 })
 ```
 
-# Setando custom params
+## Setando custom params
 
 ```
 p.reference = 'MyId';
