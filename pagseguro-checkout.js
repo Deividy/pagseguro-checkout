@@ -37,12 +37,12 @@ var objectToXml = function (obj) {
     for (var key in obj) {
         var value = obj[key];
 
-        if (!value || V.isString(value) || V.isNumber(value)) {
-            xml.push(keyValueToXml(key, value));
+        if (V.isObject(value)) {
+            xml.push(keyValueToXml(key, objectToXml(value)));
             continue;
         }
 
-        xml.push(keyValueToXml(key, objectToXml(value)));
+        xml.push(keyValueToXml(key, value));
     }
 
     return xml.join("");
@@ -55,7 +55,10 @@ var defaultOptions = {
     extraAmount:  null,
     redirectUrl: null,
     notificationUrl: null,
-    reference: null
+    reference: null,
+    sender: null,
+    shipping: null,
+    receiver: null
 };
 
 function PagseguroCheckout (opts) {
@@ -68,16 +71,17 @@ function PagseguroCheckout (opts) {
     this.items = opts.items || [ ];
 
     for (var key in defaultOptions) {
-        this[key] = opts[key] || defaultOptions[key];
+        (function(key, self) {
+            self[key] = function(v) {
+                return self._getOrSetCheckoutProperty(key, v);
+            }
+            self.checkout[key] = opts[key] || defaultOptions[key];
+        }(key, this));
     }
 };
 
 PagseguroCheckout.prototype = {
     constructor: PagseguroCheckout.constructor,
-
-    sender: function (v) { return this._getOrSetCheckoutProperty("sender", v); },
-    shipping: function (v) { return this._getOrSetCheckoutProperty("shipping", v); },
-    receiver: function (v) { return this._getOrSetCheckoutProperty("receiver", v); },
 
     add: function (item) {
         V.keys(item, [ 'id', 'amount' ], 'item')
@@ -88,20 +92,25 @@ PagseguroCheckout.prototype = {
         item.amount = Number(item.amount).toFixed(2)
 
         this.items.push(item);
+        return this;
     },
 
     xml: function () {
         var xml = [ '<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>' ];
         var checkout = [];
 
-        for (var option in defaultOptions) {
-            if (this[option] != null) {
-                checkout.push(keyValueToXml(option, this[option]))
-            }
-        }
-
         for (var key in this.checkout) {
-            checkout.push(keyValueToXml(key, objectToXml(this.checkout[key])));
+            var value = this.checkout[key];
+
+            if (value == null) {
+                continue;
+            }
+            
+            if (V.isObject(value)) {
+                value = objectToXml(value);
+            }
+
+            checkout.push(keyValueToXml(key, value));
         }
 
         var items = [ ];
@@ -174,8 +183,8 @@ PagseguroCheckout.prototype = {
         V.string(attr, 'attr');
 
         if (object != null) {
-            V.object(object, attr);
-            return this.checkout[attr] = object;
+            this.checkout[attr] = object;
+            return this;
         }
 
         return this.checkout[attr];

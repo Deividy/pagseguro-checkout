@@ -1,44 +1,46 @@
 var pagseguro = require('../pagseguro-checkout');
 var p;
 
+var assertKeys = {
+    maxUses: 1,
+    maxAge: 1800,
+    currency: 'BRL',
+    extraAmount: null,
+    redirectURL: null,
+    notificationURL: null,
+    reference: null
+}; 
+
+var assertPagseguro = function (p) {
+    for (var key in assertKeys) {
+        if (p.checkout[key] == null) {
+            (p.checkout[key] == assertKeys[key]).should.be.eql(true)
+        } else {
+            p.checkout[key].should.be.eql(assertKeys[key]);
+        }
+    }
+};
+
 describe('Pagseguro checkout', function () {
     it("initialize", function () {
         p = pagseguro("deividyz@gmail.com", "bogustoken");
 
-        assertKeys = {
-            email: "deividyz@gmail.com",
-            token: "bogustoken",
-            items: [ ],
-            maxUses: 1,
-            maxAge: 1800,
-            currency: 'BRL',
-            extraAmount: undefined,
-            redirectURL: undefined,
-            notificationURL: undefined,
-            checkout: { }
-        };
-
-        for (var key in assertKeys) {
-            if (p[key] == null) {
-                (p[key] == assertKeys[key]).should.be.eql(true)
-            } else {
-                p[key].should.be.eql(assertKeys[key]);
-            }
-        }
+        assertPagseguro(p)
     });
 
     it("initialize with custom config", function () {
-        cfg = { 
+        var cfg = { 
             maxUses: 1,
             maxAge: 2500,
             currency: 'BRL'
         };
 
-        p = pagseguro("contato@solnaweb.com.br", "bogustoken", cfg);
+        assertKeys.maxUses = cfg.maxUses;
+        assertKeys.maxAge = cfg.maxAge;
+        assertKeys.currency = cfg.currency;
 
-        for (var key in cfg) {
-            p[key].should.be.eql(cfg[key]);
-        }
+        p = pagseguro("contato@solnaweb.com.br", "bogustoken", cfg);
+        assertPagseguro(p)
     });
 
     it("try to request code without items", function (done) {
@@ -87,7 +89,7 @@ describe('Pagseguro checkout', function () {
     it('build full xml', function () {
         p = pagseguro("deividyz@gmail.com", "bogustoken");
 
-        p.reference = "ABC15";
+        p.reference("ABC15");
 
         p.sender({
             name: "Jose Comprador",
