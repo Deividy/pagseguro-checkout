@@ -1,6 +1,6 @@
 {
   "name": "pagseguro-checkout",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Easiest way to get Pagseguro checkout url",
   "main": "pagseguro-checkout.js",
   "dependencies": {
