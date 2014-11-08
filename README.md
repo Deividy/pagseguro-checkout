@@ -62,6 +62,15 @@ p.shipping({
 })
 ```
 
+# Setando custom params
+
+```
+p.reference = 'MyId';
+p.extraAmount = 10.00;
+p.redirectUrl = 'http://mywebpagepagseguro.me'
+p.notificationUrl = 'http://mywebpagepagseguro.me'
+```
+
 ## Pegando a URL de checkout
 
 ```javascript

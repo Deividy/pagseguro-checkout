@@ -54,7 +54,8 @@ var defaultOptions = {
     currency: 'BRL',
     extraAmount:  null,
     redirectUrl: null,
-    notificationUrl: null
+    notificationUrl: null,
+    reference: null
 };
 
 function PagseguroCheckout (opts) {

@@ -87,6 +87,8 @@ describe('Pagseguro checkout', function () {
     it('build full xml', function () {
         p = pagseguro("deividyz@gmail.com", "bogustoken");
 
+        p.reference = "ABC15";
+
         p.sender({
             name: "Jose Comprador",
             email: "comprador@uol.com.br",
@@ -126,6 +128,7 @@ describe('Pagseguro checkout', function () {
                 '<maxUses>1</maxUses>',
                 '<maxAge>1800</maxAge>',
                 '<currency>BRL</currency>',
+                '<reference>ABC15</reference>',
                 '<sender>',
                     '<name>Jose Comprador</name>',
                     '<email>comprador@uol.com.br</email>',
