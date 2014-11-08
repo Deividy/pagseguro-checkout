@@ -14,7 +14,7 @@ var paymentUrl = "https://pagseguro.uol.com.br/v2/checkout/payment.html";
 var checkoutUrl = "https://ws.pagseguro.uol.com.br/v2/checkout";
 
 // I'm aware of what can happen if we try to parse the XML/HTML with regex
-// http://stackoverflow.com/a/1732454/1617888
+// (you should be aware too :)) http://stackoverflow.com/a/1732454/1617888
 // BUT, we just need to get some simple data from the response XML
 // we just need to get the checkout code OR the error messages, so these
 // regex can help us to do a good job here.
@@ -66,6 +66,11 @@ function PagseguroCheckout (opts) {
     this.token = opts.token;
     this.items = opts.items || [ ];
 
+    // here we build the acessors, for every option we have a cool chaining
+    // method that can be used to retrieve the value or set it.
+    // e.g:
+    // var maxUses = this.maxUses();
+    // this.maxUses(5).maxAge(100);
     for (var key in defaultOptions) {
         (function(key) {
             this[key] = function(v) {
@@ -142,11 +147,15 @@ PagseguroCheckout.prototype = {
             }
 
             var errors = xml.match(regex.errors);
+
+            // not found any <errors>*</errors> and not found checkout code, 
+            // in that case we return the original xml and the response object
             if (!errors) return callback(xml, response);
 
             errors = errors[1];
 
-            // We need this for regex with global flag, see:
+            // We need this for regex with global flag
+            // and we need /g to get all error messages/codes
             // http://stackoverflow.com/a/1520853/1617888
             regex.codes.lastIndex = 0;
             regex.messages.lastIndex = 0;
@@ -154,8 +163,13 @@ PagseguroCheckout.prototype = {
             var codes = errors.match(regex.codes);
             var messages = errors.match(regex.messages);
 
+            // unable to find an error message/code OR 
+            // we found more/less code than messages
+            // In this (odd)case we return to the caller what we have in 
+            // <errors>()</errors>, the full xml, and the response object
+            // although, thats a very weird case, and so far I have not saw that
             if (codes.length == 0 || codes.length !== messages.length) {
-                return callback(xml, response);
+                return callback(errors, xml, response);
             }
 
             var errors = [];
