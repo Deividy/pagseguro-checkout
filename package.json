@@ -1,0 +1,28 @@
+{
+  "name": "pagseguro-checkout",
+  "version": "0.0.1",
+  "description": "Easiest way to get Pagseguro checkout url",
+  "main": "pagseguro-checkout.js",
+  "dependencies": {
+    "argument-validator": "",
+    "request": ""
+  },
+  "devDependencies": {
+    "mocha": "",
+    "should": "",
+    "grunt": "",
+    "grunt-mocha-test": ""
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Deividy/pagseguro-checkout.git"
+  },
+  "keywords": [ "pagseguro", "easiest pagseguro" ],
+  "author": "Deividy Metheler Zachetti <deividyz@gmail.com>",
+  "license": "MIT",
+  "bugs": { "url": "https://github.com/Deividy/pagseguro-checkout/issues" },
+  "homepage": "https://github.com/Deividy/pagseguro-checkout"
+}
