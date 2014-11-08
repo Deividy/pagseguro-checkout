@@ -120,6 +120,9 @@ PagseguroCheckout.prototype = {
         return xml.join("");
     },
 
+    // if found any errors it will return
+    // callback(errorMessages|rawResponse, responseObject)
+    // otherwise: callback(null, { code, url })
     request: function (callback) {
         V.instanceOf(Function, callback, 'callback');
 
@@ -165,14 +168,14 @@ PagseguroCheckout.prototype = {
 
             // unable to find an error message/code OR 
             // we found more/less code than messages
-            // In this (odd)case we return to the caller what we have in 
-            // <errors>()</errors>, the full xml, and the response object
+            // In this (odd)case we return to the caller
+            // the full xml and response object
             // although, thats a very weird case, and so far I have not saw that
             if (codes.length == 0 || codes.length !== messages.length) {
-                return callback(errors, xml, response);
+                return callback(xml, response);
             }
 
-            var errors = [];
+            errors = [];
             for (var i = 0; i < codes.length; i++) {
                 errors.push({
                     code: codes[i].replace(/<\/?code>/g, ''),
