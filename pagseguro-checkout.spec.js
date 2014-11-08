@@ -97,22 +97,20 @@ describe('Pagseguro checkout', function () {
             phone: {
                 areaCode: 11,
                 number: 56273440
-            }
-        });
-
-        p.shipping({
-            type: 1,
-            address: {
-                street: "Av. Brig. Faria Lima",
-                number: 1384,
-                complement: "5o andar",
-                district: "Jardim Paulistano",
-                postalCode: 13467460,
-                city: "Sao Paulo",
-                state: "SP",
-                country: "BRA"
-            }
-        });
+            }})
+            .shipping({
+                type: 1,
+                address: {
+                    street: "Av. Brig. Faria Lima",
+                    number: 1384,
+                    complement: "5o andar",
+                    district: "Jardim Paulistano",
+                    postalCode: 13467460,
+                    city: "Sao Paulo",
+                    state: "SP",
+                    country: "BRA"
+                }
+            });
 
         for (var i = 1; i < 5; i++) {
             p.add({
