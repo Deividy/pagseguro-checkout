@@ -125,7 +125,7 @@ PagseguroCheckout.prototype = {
         var req = https.request(options, function (res) {
             var xml = '';
             res.on('data', function (chunk) { xml += chunk; });
-            res.on("end", function(){ onRequestDone(xml, res, callback); });
+            res.on("end", function() { onRequestDone(xml, res, callback); });
         });
 
         req.on('error', callback).write(body);
@@ -164,6 +164,10 @@ var objectToXml = function (obj) {
 };                     
 
 var onRequestDone = function (xml, res, callback) {
+    V.string(xml, 'xml');
+    V.object(res, 'response object');
+    V.instanceOf(Function, callback, 'callback');
+
     var code = xml.match(regex.checkoutCode);
     if (code && code[1]) {
         var url = paymentUrl + "?" + querystring.stringify({ code: code[1] });
@@ -205,5 +209,4 @@ var onRequestDone = function (xml, res, callback) {
     }
 
     callback(errors, res);
-
 };
