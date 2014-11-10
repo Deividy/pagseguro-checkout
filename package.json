@@ -4,8 +4,7 @@
   "description": "Easiest way to get Pagseguro checkout url",
   "main": "pagseguro-checkout.js",
   "dependencies": {
-    "argument-validator": "",
-    "request": ""
+    "argument-validator": ""
   },
   "devDependencies": {
     "mocha": "",

@@ -1,6 +1,6 @@
 var querystring = require('querystring');
+var https = require('https');
 var V = require('argument-validator');
-var request = require('request');
 
 module.exports = function (email, token, options) {
     options = options || { };
@@ -11,7 +11,6 @@ module.exports = function (email, token, options) {
 };
 
 var paymentUrl = "https://pagseguro.uol.com.br/v2/checkout/payment.html";
-var checkoutUrl = "https://ws.pagseguro.uol.com.br/v2/checkout";
 
 // I'm aware of what can happen if we try to parse the XML/HTML with regex
 // (you should be aware too :)) http://stackoverflow.com/a/1732454/1617888
@@ -24,25 +23,6 @@ var regex = {
     codes: /<code>([\d]+)<\/code>/g,
     messages: /<message>([\s\S]*?)<\/message>/g
 };
-
-var keyValueToXml = function (key, value) {
-    V.string(key, 'key');
-    return "<" + key + ">" + value + "</" + key + ">";
-};
-
-var objectToXml = function (obj) {
-    V.object(obj, 'obj');
-
-    var xml = [ ];
-    for (var key in obj) {
-        var value = obj[key];
-        if (V.isObject(value)) value = objectToXml(value);
-
-        xml.push(keyValueToXml(key, value));
-    }
-
-    return xml.join("");
-};                     
 
 var defaultOptions = {
     maxUses: 1,
@@ -85,7 +65,6 @@ PagseguroCheckout.prototype = {
     constructor: PagseguroCheckout.constructor,
 
     add: function (item) {
-        V.keys(item, [ 'id', 'amount' ], 'item')
         V.keysWithString(item, [ 'description' ], 'item');
         V.keysWithNumber(item, [ 'quantity', 'weight' ], 'item');
 
@@ -125,66 +104,32 @@ PagseguroCheckout.prototype = {
     // otherwise: callback(null, { code, url })
     request: function (callback) {
         V.instanceOf(Function, callback, 'callback');
-
         if (this.items.length == 0) {
             return callback("Items must have at least one item.");
         }
 
         var qs = querystring.stringify({ email: this.email, token: this.token });
+        var body = this.xml();
         var options = {
-            uri: checkoutUrl + "?" + qs,
+            host: "ws.pagseguro.uol.com.br",
+            path: "/v2/checkout?" + qs,
+            port: 443,
             method: "POST",
-            headers: { "Content-Type": 'application/xml; charset=UTF-8' },
-            body: this.xml()
+            headers: {
+                'Cookie': "cookie",
+                'Content-Type': 'application/xml; charset=UTF-8',
+                'Content-Length': Buffer.byteLength(body)
+            }
         };
 
-        request(options, function(err, response, xml) {
-            if (err) return callback(err);
-
-            var code = xml.match(regex.checkoutCode);
-            if (code && code[1]) {
-                code = code[1];
-                var url = paymentUrl + "?" + querystring.stringify({ code: code });
-
-                return callback(null, { code: code, url: url });
-            }
-
-            var errors = xml.match(regex.errors);
-
-            // not found any <errors>*</errors> and not found checkout code, 
-            // in that case we return the original xml and the response object
-            if (!errors) return callback(xml, response);
-
-            errors = errors[1];
-
-            // We need this for regex with global flag
-            // and we need /g to get all error messages/codes
-            // http://stackoverflow.com/a/1520853/1617888
-            regex.codes.lastIndex = 0;
-            regex.messages.lastIndex = 0;
-
-            var codes = errors.match(regex.codes);
-            var messages = errors.match(regex.messages);
-
-            // unable to find an error message/code OR 
-            // we found more/less code than messages
-            // In this (odd)case we return to the caller
-            // the full xml and response object
-            // although, thats a very weird case, and so far I have not saw that
-            if (codes.length == 0 || codes.length !== messages.length) {
-                return callback(xml, response);
-            }
-
-            errors = [];
-            for (var i = 0; i < codes.length; i++) {
-                errors.push({
-                    code: codes[i].replace(/<\/?code>/g, ''),
-                    message: messages[i].replace(/<\/?message>/g, '')
-                });
-            }
-
-            callback(errors, response);
+        var req = https.request(options, function (res) {
+            var xml = '';
+            res.on('data', function (chunk) { xml += chunk; });
+            res.on("end", function(){ onRequestDone(xml, res, callback); });
         });
+
+        req.on('error', callback).write(body);
+        req.end();
     },
 
     _getOrSetCheckoutProperty: function (attr, value) {
@@ -197,4 +142,68 @@ PagseguroCheckout.prototype = {
 
         return this.checkout[attr];
     }
+};
+
+var keyValueToXml = function (key, value) {
+    V.string(key, 'key');
+    return "<" + key + ">" + value + "</" + key + ">";
+};
+
+var objectToXml = function (obj) {
+    V.object(obj, 'obj');
+
+    var xml = [ ];
+    for (var key in obj) {
+        var value = obj[key];
+        if (V.isObject(value)) value = objectToXml(value);
+
+        xml.push(keyValueToXml(key, value));
+    }
+
+    return xml.join("");
+};                     
+
+var onRequestDone = function (xml, res, callback) {
+    var code = xml.match(regex.checkoutCode);
+    if (code && code[1]) {
+        var url = paymentUrl + "?" + querystring.stringify({ code: code[1] });
+        return callback(null, { code: code[1], url: url });
+    }
+
+    var errors = xml.match(regex.errors);
+
+    // not found any <errors>*</errors> and not found checkout code, 
+    // in that case we return the original xml and the response object
+    if (!errors) return callback(xml, res);
+
+    errors = errors[1];
+
+    // We need this for regex with global flag
+    // and we need /g to get all error messages/codes
+    // http://stackoverflow.com/a/1520853/1617888
+    regex.codes.lastIndex = 0;
+    regex.messages.lastIndex = 0;
+
+    var codes = errors.match(regex.codes);
+    var messages = errors.match(regex.messages);
+
+    // unable to find an error message/code OR 
+    // we found more/less code than messages
+    // In this (odd)case we return to the caller
+    // the full xml and response object
+    // although, thats a very weird case, and so far I have not saw that
+    if (codes.length == 0 || codes.length !== messages.length) {
+        return callback(xml, res);
+    }
+
+    errors = [];
+    for (var i = 0; i < codes.length; i++) {
+        errors.push({
+            code: codes[i].replace(/<\/?code>/g, ''),
+            message: messages[i].replace(/<\/?message>/g, '')
+        });
+    }
+
+    callback(errors, res);
+
 };
