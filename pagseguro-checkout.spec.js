@@ -192,4 +192,52 @@ describe('Pagseguro checkout', function () {
             done();
         });
     });
+
+    /*
+    it('get code', function (done) {
+        p = pagseguro("", "");
+
+        p.reference("ABC15");
+
+        p.sender({
+            name: "Jose Comprador",
+            email: "comprador@uol.com.br",
+            phone: {
+                areaCode: 11,
+                number: 56273440
+            }})
+            .shipping({
+                type: 1,
+                address: {
+                    street: "Av. Brig. Faria Lima",
+                    number: 1384,
+                    complement: "5o andar",
+                    district: "Jardim Paulistano",
+                    postalCode: 13467460,
+                    city: "Sao Paulo",
+                    state: "SP",
+                    country: "BRA"
+                }
+            });
+
+        for (var i = 1; i < 5; i++) {
+            p.add({
+                id: i,
+                description: "Test " + i,
+                quantity: i * 2,
+                weight: i * 10,
+                amount: (i * 50 / 10)
+            });
+        }  
+
+        p.request(function (err, res) {
+            if (err) return done(JSON.stringify(err));
+
+            console.log(res);
+            res.code.should.be.a.String
+            done()
+        
+        });
+    });
+    */
 });
