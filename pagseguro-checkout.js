@@ -58,7 +58,7 @@ PagseguroCheckout.prototype = {
         V.keysWithNumber(item, [ 'quantity', 'weight' ], 'item');
 
         // ensure always two decimal points for amount
-        item.amount = Number(item.amount).toFixed(2)
+        item.amount = Number(item.amount).toFixed(2);
 
         this.items.push(item);
         return this;
@@ -82,8 +82,8 @@ PagseguroCheckout.prototype = {
             items.push(keyValueToXml('item', objectToXml(this.items[i])));
         }
 
-        checkout.push(keyValueToXml("items", items.join("")))
-        xml.push(keyValueToXml("checkout", checkout.join("")))
+        checkout.push(keyValueToXml("items", items.join("")));
+        xml.push(keyValueToXml("checkout", checkout.join("")));
 
         return xml.join("");
     },
