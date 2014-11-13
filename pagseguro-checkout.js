@@ -12,18 +12,6 @@ module.exports = function (email, token, options) {
 
 var paymentUrl = "https://pagseguro.uol.com.br/v2/checkout/payment.html";
 
-// I'm aware of what can happen if we try to parse the XML/HTML with regex
-// (you should be aware too :)) http://stackoverflow.com/a/1732454/1617888
-// BUT, we just need to get some simple data from the response XML
-// we just need to get the checkout code OR the error messages, so these
-// regex can help us to do a good job here.
-var regex = {
-    checkoutCode: /<checkout><code>([\w\W]+)<\/code>/,
-    errors: /<errors>([\w\W]+)<\/errors>/,
-    codes: /<code>([\d]+)<\/code>/g,
-    messages: /<message>([\s\S]*?)<\/message>/g
-};
-
 var defaultOptions = {
     maxUses: 1,
     maxAge: 1800,
@@ -65,6 +53,7 @@ PagseguroCheckout.prototype = {
     constructor: PagseguroCheckout.constructor,
 
     add: function (item) {
+        V.keys(item, [ 'id', 'amount' ], 'item');
         V.keysWithString(item, [ 'description' ], 'item');
         V.keysWithNumber(item, [ 'quantity', 'weight' ], 'item');
 
@@ -162,6 +151,18 @@ var objectToXml = function (obj) {
 
     return xml.join("");
 };                     
+
+// I'm aware of what can happen if we try to parse the XML/HTML with regex
+// (you should be aware too :)) http://stackoverflow.com/a/1732454/1617888
+// BUT, we just need to get some simple data from the response XML
+// we just need to get the checkout code OR the error messages, so these
+// regex can help us to do a good job here.
+var regex = {
+    checkoutCode: /<checkout><code>([\w\W]+)<\/code>/,
+    errors: /<errors>([\w\W]+)<\/errors>/,
+    codes: /<code>([\d]+)<\/code>/g,
+    messages: /<message>([\s\S]*?)<\/message>/g
+};
 
 var onRequestDone = function (xml, res, callback) {
     V.string(xml, 'xml');
